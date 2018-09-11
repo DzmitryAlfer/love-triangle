@@ -4,34 +4,27 @@
  */
 
 module.exports = function getLoveTrianglesCount(preferences = []) {
-  let numberOfTriangles = 0;
-  const loveTriangles = [];
   const loveTriangleKeys = [];
-  debugger;
-  
+
   for (let i = 0; i < preferences.length; i++) {
-    let triangle = [];
+    let currentLoveTriangles = [];
 
-    if(getTriangle(i, preferences, triangle)){
-      
-      if(triangle.length < 3) {
-        continue;
-      }
+    getLoveTriangles(i, preferences, currentLoveTriangles, []);
 
+    currentLoveTriangles.forEach(triangle => {
       if(ifTriangleNotExists(loveTriangleKeys, triangle))
       {
         const key = generateTriangleKey(triangle);
 
         loveTriangleKeys.push(key);
-        loveTriangles.push(triangle);
       }
-    }
+    });
   }
 
-  debugger;
-
-  return loveTriangles.length;
+  return loveTriangleKeys.length;
 };
+
+
 
 function generateTriangleKey(triangle) {
   return triangle.join('|');
@@ -73,22 +66,38 @@ function ifTriangleNotExists(loveTriangleKeys, triangle) {
   return !loveTriangleKeys.some(existKey => allTriangleKeys.some(newKey => newKey === existKey));
 }
 
-function getTriangle(position, preferences, triangle) {
-  if (!preferences[position]) {
-    triangle.length = 0;
-    return false;
+function getLoveTriangles(position, preferences, currentLoveTriangles, currentTriangle) {
+  if (preferences.length <= position) {
+    return;
   }
 
-  const corner = preferences[position];
+  const currentCorner = preferences[position];
+
+  if(currentTriangle.length === 3) {
+    if (currentTriangle[0] === currentCorner) {
+      currentLoveTriangles.push(currentTriangle);
+    }
+    return;
+  }
+
+  currentTriangle.push(currentCorner);
+
   const nextCorner = position + 1;
 
-  if (triangle[0] === corner) {
-    return true;
+  if(nextCorner === currentCorner)
+  {
+    return;
   }
 
-  const nextPosition = preferences.findIndex(p => p === nextCorner);
+  const nextPositions = preferences.reduce((acc, cur, idx) => {
+    if(cur === nextCorner) {
+      acc.push(idx);
+    }
+    
+    return acc;
+  }, []);
 
-  triangle.push(corner);
-
-  return getTriangle(nextPosition, preferences, triangle)
+  nextPositions.forEach(nextPosition => {
+    getLoveTriangles(nextPosition, preferences, currentLoveTriangles, currentTriangle.slice(0))
+  });
 }
